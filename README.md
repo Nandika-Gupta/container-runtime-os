@@ -44,48 +44,57 @@ A supervisor process manages multiple containers concurrently, ensuring isolatio
 ## Execution Steps
 
 ### Build
-make
 
+```bash
+make
+```
 
 ### Load Kernel Module
 
+```bash
 sudo insmod monitor.ko
 sudo mknod /dev/container_monitor c 239 0
 sudo chmod 666 /dev/container_monitor
-
+```
 
 ### Prepare Runtime
 
+```bash
 mkfifo cmd_pipe
 gcc engine.c -o engine
-
+```
 
 ### Run Supervisor
 
+```bash
 sudo ./engine
-
+```
 
 ### Start Containers (new terminal)
 
+```bash
 echo "start alpha" > cmd_pipe
 echo "start beta" > cmd_pipe
 echo "ps" > cmd_pipe
-
+```
 
 ### View Logs
 
+```bash
 cat alpha.log
-
+```
 
 ### Stop Container
 
+```bash
 echo "stop alpha" > cmd_pipe
-
+```
 
 ### Cleanup
 
+```bash
 sudo rmmod monitor
-
+```
 
 ---
 
@@ -110,24 +119,15 @@ The system ensures proper cleanup of all resources:
 
 ---
 
-## Limitations
-
-- Memory limits are logged but not enforced  
-- No custom scheduling algorithm implemented  
-- Simplified model of container runtime  
-
----
-
 ## Project Structure
 
-
-engine.c
-monitor.c
-monitor_ioctl.h
-Makefile
-rootfs-alpha/
-rootfs-beta/
-README.md
+- engine.c
+- monitor.c
+- monitor_ioctl.h
+- Makefile
+- rootfs-alpha/
+- rootfs-beta/
+- README.md
 
 ---
 
