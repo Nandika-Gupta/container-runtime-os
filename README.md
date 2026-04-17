@@ -4,19 +4,22 @@ A lightweight multi-container runtime implemented in C on Linux, integrating use
 
 ## Overview
 
-This project demonstrates core operating system concepts including process isolation, inter-process communication, logging, kernel interaction, and resource cleanup.
+This project demonstrates core operating system concepts including process isolation, inter-process communication, logging, kernel interaction, scheduling behavior, and resource cleanup.
 
-A supervisor process manages multiple containers concurrently, ensuring isolation using namespaces and `chroot`, while communicating through FIFO-based IPC. A kernel module is used to monitor container processes via IOCTL.
+A supervisor process manages multiple containers concurrently, ensuring isolation using namespaces and chroot, while communicating through FIFO-based IPC. A kernel module is used to monitor container processes via IOCTL.
+
+The runtime is also used as an experimental platform to study Linux scheduling behavior under different workloads and configurations.
 
 ---
 
 ## Key Features
 
-- Container isolation using UTS and mount namespaces with `chroot`
-- FIFO-based IPC (`cmd_pipe`) for command handling
-- Pipe-based logging system for container output
-- Kernel module integration via character device and IOCTL
-- Proper resource cleanup with no zombie processes
+- Container isolation using UTS and mount namespaces with chroot  
+- FIFO-based IPC (`cmd_pipe`) for command handling  
+- Pipe-based logging system for container output  
+- Kernel module integration via character device and IOCTL  
+- Scheduler experiments with CPU-bound and I/O-bound workloads  
+- Proper resource cleanup with no zombie processes  
 
 ---
 
@@ -25,10 +28,10 @@ A supervisor process manages multiple containers concurrently, ensuring isolatio
 ### User Space (engine.c)
 
 - Long-running supervisor process  
-- Container lifecycle management (`start`, `stop`, `ps`)  
+- Container lifecycle management (start, stop, ps)  
 - IPC using FIFO  
 - Logging via pipes  
-- IOCTL communication with kernel module  
+- IOCTL communication with kernel module    
 
 ---
 
@@ -37,9 +40,15 @@ A supervisor process manages multiple containers concurrently, ensuring isolatio
 - Character device: `/dev/container_monitor`  
 - Handles IOCTL calls from user space  
 - Registers container PIDs  
-- Logs monitoring information  
+- Logs monitoring information 
 
 ---
+
+### Scheduler Experiments Conducted:
+
+- Execution of **CPU-bound processes** with different priorities (nice values)  
+- Execution of **CPU-bound and I/O-bound processes simultaneously**  
+- Observation of CPU utilization and responsiveness  
 
 ## Execution Steps
 
