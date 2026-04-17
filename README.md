@@ -134,6 +134,8 @@ The system ensures proper cleanup of all resources:
 - monitor.c
 - monitor_ioctl.h
 - Makefile
+- cpu_test.c
+- mem_test.c
 - rootfs-alpha/
 - rootfs-beta/
 - README.md
