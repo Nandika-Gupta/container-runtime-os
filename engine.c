@@ -17,6 +17,7 @@
 typedef struct {
     char name[50];
     pid_t pid;
+    pid_t logger_pid;   
     int stop_requested;
 } container;
 
@@ -29,7 +30,7 @@ void sigchld_handler(int sig) {
 
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         for (int i = 0; i < count; i++) {
-            if (c[i].pid == pid) {
+            if (c[i].pid == pid || c[i].logger_pid == pid) {
 
                 if (c[i].stop_requested)
                     printf("[Stopped] %s (PID %d)\n", c[i].name, pid);
@@ -62,9 +63,7 @@ void start_container(char *name) {
 
     if (pid == 0) {
         // CHILD
-
         close(fd[0]);
-
         dup2(fd[1], STDOUT_FILENO);
         dup2(fd[1], STDERR_FILENO);
         close(fd[1]);
@@ -101,7 +100,7 @@ void start_container(char *name) {
     pid_t logger_pid = fork();
     if (logger_pid == 0) {
 
-        signal(SIGTERM, exit);   //  important fix
+        signal(SIGTERM, exit);
 
         char logfile[100];
         sprintf(logfile, "%s.log", name);
@@ -139,6 +138,7 @@ void start_container(char *name) {
 
     strcpy(c[count].name, name);
     c[count].pid = pid;
+    c[count].logger_pid = logger_pid;
     c[count].stop_requested = 0;
     count++;
 
@@ -148,11 +148,14 @@ void start_container(char *name) {
 void stop_container(char *name) {
     for (int i = 0; i < count; i++) {
         if (strcmp(c[i].name, name) == 0) {
-
             c[i].stop_requested = 1;
 
             kill(c[i].pid, SIGTERM);
-            waitpid(c[i].pid, NULL, 0);   
+            waitpid(c[i].pid, NULL, 0);
+
+            
+            kill(c[i].logger_pid, SIGTERM);
+            waitpid(c[i].logger_pid, NULL, 0);
 
             printf("Stopped %s\n", name);
             return;
@@ -169,9 +172,7 @@ void list_containers() {
 
 int main() {
     signal(SIGCHLD, sigchld_handler);
-
     char cmd[100];
-
     printf("Supervisor started (waiting on FIFO)...\n");
 
     while (1) {
@@ -199,10 +200,13 @@ int main() {
             list_containers();
         }
         else if (strcmp(token, "exit") == 0) {
-        
+
             for (int i = 0; i < count; i++) {
                 kill(c[i].pid, SIGTERM);
                 waitpid(c[i].pid, NULL, 0);
+
+                kill(c[i].logger_pid, SIGTERM);
+                waitpid(c[i].logger_pid, NULL, 0);
             }
 
             printf("Shutting down supervisor...\n");
